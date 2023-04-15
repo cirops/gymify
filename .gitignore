@@ -1,2 +1,6 @@
+## Build and module folders
 node_modules
 build
+
+## Environment Variables
+.env
