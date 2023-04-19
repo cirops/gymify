@@ -1,7 +1,7 @@
 {
-  "name": "api-solid",
+  "name": "gymify",
   "version": "0.0.1",
-  "description": "GymPass-style app.",
+  "description": "GymPass-style app, using Fastify and Prisma",
   "main": "index.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
