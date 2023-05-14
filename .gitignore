@@ -4,3 +4,6 @@ build
 
 ## Environment Variables
 .env
+
+## Temporary/test files
+coverage
