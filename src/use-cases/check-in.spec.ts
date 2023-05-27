@@ -2,25 +2,26 @@ import { expect, describe, it, beforeEach, afterEach, vi } from 'vitest'
 import { CheckInUseCase } from './check-in'
 import { InMemoryCheckInsRepository } from '@/repositories/in-memory/in-memory-check-ins-repository'
 import { InMemoryGymsRepository } from '@/repositories/in-memory/in-memory-gyms-repository'
-import { Decimal } from '@prisma/client/runtime/library'
+import { MaxNumberOfCheckInsError } from './errors/max-number-of-check-ins-error'
+import { MaxDistanceError } from './errors/max-distance-error'
 
 let checkInsRepository: InMemoryCheckInsRepository
 let gymsRepository: InMemoryGymsRepository
 let sut: CheckInUseCase
 
-describe('Get CheckIn Profile Use Case', () => {
-  beforeEach(() => {
+describe('Get CheckIn Use Case', () => {
+  beforeEach(async () => {
     checkInsRepository = new InMemoryCheckInsRepository()
     gymsRepository = new InMemoryGymsRepository()
     sut = new CheckInUseCase(checkInsRepository, gymsRepository)
 
-    gymsRepository.items.push({
+    await gymsRepository.create({
       id: 'gym-01',
       title: 'JavaScript Gym',
       description: '',
       phone: '',
-      latitude: new Decimal(0),
-      longitude: new Decimal(0),
+      latitude: -27.5853523,
+      longitude: -48.5085744,
     })
 
     vi.useFakeTimers()
@@ -56,7 +57,7 @@ describe('Get CheckIn Profile Use Case', () => {
         userLatitude: -27.5853523,
         userLongitude: -48.5085744,
       }),
-    ).rejects.toBeInstanceOf(Error)
+    ).rejects.toBeInstanceOf(MaxNumberOfCheckInsError)
   })
 
   it('should be able to check in twice but in different days', async () => {
@@ -78,5 +79,25 @@ describe('Get CheckIn Profile Use Case', () => {
     })
 
     expect(checkIn.id).toEqual(expect.any(String))
+  })
+
+  it('should NOT be able to check in on a distant gym', async () => {
+    await gymsRepository.create({
+      id: 'gym-02',
+      title: 'JavaScript Gym',
+      description: '',
+      phone: '',
+      latitude: -27.6001231,
+      longitude: -48.4917664,
+    })
+
+    await expect(() =>
+      sut.execute({
+        userId: 'user-01',
+        gymId: 'gym-02',
+        userLatitude: -27.5853523,
+        userLongitude: -48.5085744,
+      }),
+    ).rejects.toBeInstanceOf(MaxDistanceError)
   })
 })
